@@ -33,9 +33,9 @@ jobs:
       - name: 'Parse build arguments'
         run: |
           echo 'Build Paramteters:'
-          echo 'Dockerfile Path ${{ fromJson(steps.build.outputs.arguments)[0] }}'
-          echo 'Image Name ${{ fromJson(steps.build.outputs.arguments)[1] }}'
-          echo 'Image Tag ${{ fromJson(steps.build.outputs.arguments)[2] }}'
+          echo '{DOCKERFILE_PATH}=${{ fromJson(steps.build.outputs.arguments)[0] }}' >> $GITHUB_ENV
+          echo '{IMAGE_NAME}=${{ fromJson(steps.build.outputs.arguments)[1] }}' >> $GITHUB_ENV
+          echo '{IMAGE_TAG}=${{ fromJson(steps.build.outputs.arguments)[2] }}' >> $GITHUB_ENV
         if: steps.build.outputs.triggered == 'true'
 
       - name: 'Login via Azure CLI'
@@ -52,8 +52,8 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
         if: steps.build.outputs.triggered == 'true'
           
-      - name: 'Build and push image'
+      - name: 'Build image'
         run: |
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
+          docker build ${DOCKERFILE_PATH} -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/{IMAGE_NAME}:${IMAGE_TAG}
+          #docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
         if: steps.build.outputs.triggered == 'true'
