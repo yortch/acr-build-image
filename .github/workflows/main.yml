@@ -6,6 +6,7 @@ name: CI
 on:
   # Triggers the workflow on comments added to pull requests
   issue_comment:
+    types: [created]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -19,7 +20,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
 
       - name: 'Check for build command'
         id: build
