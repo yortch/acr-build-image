@@ -35,6 +35,8 @@ jobs:
           echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_ENV
+          echo "::set-output name=IMAGE_NAME::$IMAGE_NAME"
+          echo "::set-output name=IMAGE_TAG::$IMAGE_TAG"
         if: steps.build.outputs.triggered == 'true'
           
       - name: 'Build image'
