@@ -1,16 +1,17 @@
-# This is a basic workflow to help you get started with Actions
-
-name: IMAGE-BUILD
+# This is a basic workflow to build and deploy images to Azure Container Registry.
+name: IMAGE-BUILD-DEPLOY
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, closed]
     branches: [main]
   issue_comment:
     types: [created, edited]
 
+env:
+  PR_MERGED: (github.event.pull_request.merged == true)
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -36,19 +37,18 @@ jobs:
           echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_ENV
-        if: steps.build.outputs.triggered == 'true'
+        if: steps.build.outputs.triggered == 'true' || env.PR_MERGED
           
       - name: 'Build image'
         run: |
           docker build $DOCKERFILE_PATH -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
-          #docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
-        if: steps.build.outputs.triggered == 'true'
+        if: steps.build.outputs.triggered == 'true' || env.PR_MERGED
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: steps.build.outputs.triggered == 'true'
+        if: env.PR_MERGED
       
       - name: 'Login to ACR'
         uses: azure/docker-login@v1
@@ -56,4 +56,9 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: steps.build.outputs.triggered == 'true'
+        if: env.PR_MERGED
+        
+      - name: 'Deploy image to ACR'
+        run: |
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
+        if: env.PR_MERGED
