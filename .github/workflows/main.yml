@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: IMAGE-BUILD
 
 # Controls when the workflow will run
 on:
@@ -32,10 +32,16 @@ jobs:
 
       - name: 'Parse build arguments'
         run: |
-          echo 'Build Paramteters:'
-          echo '{DOCKERFILE_PATH}=${{ fromJson(steps.build.outputs.arguments)[0] }}' >> $GITHUB_ENV
-          echo '{IMAGE_NAME}=${{ fromJson(steps.build.outputs.arguments)[1] }}' >> $GITHUB_ENV
-          echo '{IMAGE_TAG}=${{ fromJson(steps.build.outputs.arguments)[2] }}' >> $GITHUB_ENV
+          echo "Build Parameters"
+          echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_ENV
+        if: steps.build.outputs.triggered == 'true'
+          
+      - name: 'Build image'
+        run: |
+          docker build $DOCKERFILE_PATH -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
+          #docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
         if: steps.build.outputs.triggered == 'true'
 
       - name: 'Login via Azure CLI'
@@ -50,10 +56,4 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: steps.build.outputs.triggered == 'true'
-          
-      - name: 'Build image'
-        run: |
-          docker build ${DOCKERFILE_PATH} -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/{IMAGE_NAME}:${IMAGE_TAG}
-          #docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
         if: steps.build.outputs.triggered == 'true'
