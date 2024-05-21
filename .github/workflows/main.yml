@@ -27,7 +27,7 @@ jobs:
         id: build
         uses: eliasmelgaco/pull-request-comment-trigger@v2.0.0
         with:
-          trigger: '#build: ** **:**'
+          trigger: '#build: ** ** **'
           allow_arguments: true
 
       - name: 'Parse build arguments'
