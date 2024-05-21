@@ -5,5 +5,5 @@ Replace the command below accordingly:
 ```
 Example:
 ```
-#build: images/base/utility/azcopy/10.24.0 azcopy 10.24.0
+#build: images/utility/azcopy/10.24.0 azcopy 10.24.0
 ```
