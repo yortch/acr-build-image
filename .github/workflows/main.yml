@@ -29,29 +29,24 @@ jobs:
           trigger: '#build: ** ** **'
           allow_arguments: true
 
-      - name: 'Is PR Merged event'
-        run: |
-          echo "PR_MERGED=true" >> $GITHUB_ENV
-        if: github.event.pull_request.merged == true
-
       - name: 'Parse build arguments'
         run: |
           echo "Build Parameters"
           echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_ENV
-        if: steps.build.outputs.triggered == 'true' || env.PR_MERGED
+        if: steps.build.outputs.triggered == 'true' || github.event.pull_request.merged == true
           
       - name: 'Build image'
         run: |
           docker build $DOCKERFILE_PATH -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
-        if: steps.build.outputs.triggered == 'true' || env.PR_MERGED
+        if: steps.build.outputs.triggered == 'true' || github.event.pull_request.merged == true
 
       - name: 'Login via Azure CLI'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-        if: env.PR_MERGED
+        if: github.event.pull_request.merged == true
       
       - name: 'Login to ACR'
         uses: azure/docker-login@v1
@@ -59,9 +54,9 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-        if: env.PR_MERGED
+        if: github.event.pull_request.merged == true
         
       - name: 'Deploy image to ACR'
         run: |
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
-        if: env.PR_MERGED
+        if: github.event.pull_request.merged == true
