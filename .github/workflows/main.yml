@@ -6,9 +6,10 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened, edited]
+    branches: [main]
   issue_comment:
-    types: [created]
+    types: [created, edited]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -26,13 +27,15 @@ jobs:
         id: build
         uses: eliasmelgaco/pull-request-comment-trigger@v2.0.0
         with:
-          trigger: '#build: **'
+          trigger: '#build: ** **:**'
           allow_arguments: true
 
       - name: 'Parse build arguments'
         run: |
-          echo 'Found it!'
-          echo 'Deploy on ${{ fromJson(steps.build.outputs.arguments)[0] }}'
+          echo 'Build Paramteters:'
+          echo 'Dockerfile Path ${{ fromJson(steps.build.outputs.arguments)[0] }}'
+          echo 'Image Name ${{ fromJson(steps.build.outputs.arguments)[1] }}'
+          echo 'Image Tag ${{ fromJson(steps.build.outputs.arguments)[2] }}'
         if: steps.build.outputs.triggered == 'true'
 
       - name: 'Login via Azure CLI'
