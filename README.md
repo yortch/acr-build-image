@@ -1,8 +1,9 @@
 # acr-build-image
-Demo for CI flow to build and deploy image to ACR
+Demo for Github workflow to build and deploy "approved" images to ACR
 
+## Setup Instructions
 
-## Setup service principal
+### Setup service principal
 
 1. Create resource group
     ```
@@ -22,7 +23,7 @@ Demo for CI flow to build and deploy image to ACR
     ```
     CLIENT_ID=<clientId value>
     ```
-## Setup ACR
+### Setup ACR
 1. Create a new Azure Container Registry
     ```
     ACR_NAME=acrgithubactiondemo
@@ -37,7 +38,7 @@ Demo for CI flow to build and deploy image to ACR
     az role assignment create --assignee $CLIENT_ID --scope $RG_ID --role AcrPush
     ```
 
-## Setup github secrets
+### Setup github secrets
 1. Navigate to the "Settings" of your repo: [https://github.com/yortch/acr-build-image/settings]
 1. Expand "Secrets and Variables" and click on "Actions": [https://github.com/yortch/acr-build-image/settings/secrets/actions]
 1. Create each of the following secrets:
@@ -48,3 +49,18 @@ Demo for CI flow to build and deploy image to ACR
     |`REGISTRY_USERNAME`    | The clientId from the JSON output from the service principal creation
     |`REGISTRY_PASSWORD`    | The clientSecret from the JSON output from the service principal creation
     |`RESOURCE_GROUP`       | The name of the resource group you used to scope the service principal
+
+## Contributing images
+
+1. Create Dockerfile images to one of the following directories:
+* base: for base images, e.g. OS images or SDK images that contain customizations
+* utility: for custom images, e.g. that do not exist in public repositories or combine multiple utilities needed for a given process
+1. Use this directory structure: `<base|utility>/<image_name>/<image_tag>`
+1. Create a PR with a comment including the following command:
+    ```
+    #build: <relative Dockerfile path> <imagename> <tag>
+    ```
+    Example:
+    ```
+    #build: images/utility/azcopy/10.24.0 azcopy 10.24.0
+    ```
