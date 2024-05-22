@@ -33,13 +33,14 @@ jobs:
         run: |
           echo "Build Parameters"
           echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_ENV
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=${{ fromJson(steps.build.outputs.arguments)[1] }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}" >> $GITHUB_OUTPUT
         if: steps.build.outputs.triggered == 'true'
           
       - name: 'Build image'
+        env:
+          IMAGE_NAME: ${{ steps.build.outputs.IMAGE_NAME }}
+          IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
         run: |
           docker build $DOCKERFILE_PATH -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
         if: steps.build.outputs.triggered == 'true'
