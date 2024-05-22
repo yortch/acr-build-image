@@ -37,8 +37,8 @@ jobs:
           IMAGE_TAG=${{ fromJson(steps.build.outputs.arguments)[2] }}
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_OUTPUT
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE_NAME=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
         if: steps.build.outputs.triggered == 'true'
           
       - name: 'Build image'
