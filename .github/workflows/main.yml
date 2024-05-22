@@ -15,8 +15,8 @@ jobs:
   # This workflow contains a single job called "build"
   build-image:
     outputs:
-      IMAGE_NAME: ${{ steps.build.outputs.IMAGE_NAME }}
-      IMAGE_TAG: ${{ steps.build.outputs.IMAGE_TAG }}
+      IMAGE_NAME: ${{ steps.parse.outputs.IMAGE_NAME }}
+      IMAGE_TAG: ${{ steps.parse.outputs.IMAGE_TAG }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -33,6 +33,7 @@ jobs:
           allow_arguments: true
 
       - name: 'Parse build arguments'
+        id: parse
         run: |
           echo "Build Parameters"
           echo "DOCKERFILE_PATH=${{ fromJson(steps.build.outputs.arguments)[0] }}" >> $GITHUB_ENV
