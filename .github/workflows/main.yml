@@ -47,8 +47,18 @@ jobs:
           
       - name: 'Build image'
         run: |
-          docker build $DOCKERFILE_PATH -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
+          FULL_IMAGE_TAG=${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
+          docker build $DOCKERFILE_PATH -t $FULL_IMAGE_TAG
+          mkdir -p /tmp/docker/artifacts
+          docker save $FULL_IMAGE_TAG > /tmp/docker/artifacts/$IMAGE_NAME-$IMAGE_TAG.tar
         if: steps.build.outputs.triggered == 'true'
+        
+      - name: Temporarily save Docker image
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker-artifact
+          path: /tmp/docker/artifacts
+          retention-days: 1
 
     # This workflow contains a single job called "build"
   deploy-image:
@@ -68,10 +78,18 @@ jobs:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-        
+
+      - name: Retrieve saved Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-artifact
+          path: /tmp/docker/artifacts 
+
       - name: 'Deploy image to ACR'
         env: 
           IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
           IMAGE_TAG: ${{ needs.build-image.outputs.IMAGE_TAG }}          
         run: |
+          cd /tmp/docker/artifacts
+          docker load < $IMAGE_NAME-$IMAGE_TAG.tar
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
