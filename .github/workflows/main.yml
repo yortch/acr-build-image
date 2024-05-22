@@ -44,22 +44,21 @@ jobs:
           echo "IMAGE_NAME=$IMAGE_NAME" >> "$GITHUB_OUTPUT"
           echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
         if: steps.build.outputs.triggered == 'true'
-          
+
+      - name: Create cache for docker image
+        uses: actions/cache@v4
+        with:
+          path: docker-images
+          key: image-key
+
       - name: 'Build image'
         run: |
           FULL_IMAGE_TAG=${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
           docker build $DOCKERFILE_PATH -t $FULL_IMAGE_TAG
-          mkdir -p /tmp/docker/artifacts
-          docker save $FULL_IMAGE_TAG > /tmp/docker/artifacts/$IMAGE_NAME-$IMAGE_TAG.tar
+          mkdir -p docker-images
+          docker save $FULL_IMAGE_TAG > docker-images/$IMAGE_NAME-$IMAGE_TAG.tar
         if: steps.build.outputs.triggered == 'true'
-        
-      - name: Temporarily save Docker image
-        uses: actions/upload-artifact@v2
-        with:
-          name: docker-artifact
-          path: /tmp/docker/artifacts
-          retention-days: 1
-
+      
     # This workflow contains a single job called "build"
   deploy-image:
       # The type of runner that the job will run on
@@ -79,17 +78,17 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Retrieve saved Docker image
-        uses: actions/download-artifact@v4
+      - name: Restore cached docker image
+        uses: actions/cache/restore@v4
         with:
-          name: docker-artifact
-          path: /tmp/docker/artifacts 
+          path: docker-images
+          key: image-key
 
       - name: 'Deploy image to ACR'
+        working-directory: docker-images
         env: 
           IMAGE_NAME: ${{ needs.build-image.outputs.IMAGE_NAME }}
           IMAGE_TAG: ${{ needs.build-image.outputs.IMAGE_TAG }}          
         run: |
-          cd /tmp/docker/artifacts
           docker load < $IMAGE_NAME-$IMAGE_TAG.tar
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/$IMAGE_NAME:$IMAGE_TAG
