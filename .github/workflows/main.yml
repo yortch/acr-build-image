@@ -51,6 +51,7 @@ jobs:
         with:
           path: docker-images
           key: image-key
+        if: steps.build.outputs.triggered == 'true'
 
       - name: 'Build image'
         run: |
